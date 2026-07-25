@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #131314;
+  --foreground: #e5e2e3;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+* {
+  border-color: #45464c;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #45464c;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}
+.scroll-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- Glassmorphism utilities (Curator DS, Level 1 / Level 2) --- */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-card {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.3s ease;
+}
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.markdown h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 1.4em 0 0.6em;
+  color: #e5e2e3;
+}
+.markdown h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 1.2em 0 0.5em;
+  color: #e5e2e3;
+}
+.markdown h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+  color: #e5e2e3;
+}
+.markdown p {
+  margin: 0.6em 0;
+  color: #e5e2e3;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0.6em 0 0.6em 1.4em;
+  color: #e5e2e3;
+}
+.markdown li {
+  margin: 0.2em 0;
+}
+.markdown a {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+.markdown img {
+  max-width: 100%;
+  max-height: 480px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  margin: 0.8em 0;
+  display: block;
+}
+.markdown code {
+  background: #201f21;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-family: var(--font-jbmono), "JetBrains Mono", monospace;
+  font-size: 0.9em;
+}
+.markdown pre {
+  background: #201f21;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid #45464c;
+}
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+.markdown blockquote {
+  border-left: 3px solid #8b5cf6;
+  padding-left: 1em;
+  color: #c6c6cc;
+  margin: 0.8em 0;
+}
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.8em 0;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid #45464c;
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+.markdown th {
+  background: #201f21;
+}

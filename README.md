@@ -1,0 +1,121 @@
+# ResearchCrew
+
+ResearchCrew is a Multi-Agent Research Team app. A user submits a research goal, and a team of specialized AI agents collaborates — planning, searching, analyzing, writing, and critiquing — to produce a polished, cited markdown report that streams live to a web dashboard.
+
+## The Agent Team
+
+| Agent | Role |
+|---|---|
+| Supervisor (Planner) | Breaks the goal into subtasks, delegates to workers, decides when work is done |
+| Web Research Agent | Searches the web, fetches pages, extracts facts with sources |
+| Data Agent | Analyzes numbers/tables found during research, produces comparisons and stats |
+| Coding Agent | Writes/runs small code snippets when the task needs computation |
+| Writing Agent | Drafts report sections from the shared research notes |
+| Critic Agent | Challenges drafts — flags weak evidence, missing angles, contradictions |
+| Reviewer/Synthesis Agent | Resolves the debate, merges everything into the final report |
+
+## Prerequisites
+
+- Python 3.12
+  - A venv already exists on this machine at `D:\SetUp-files\researchcrew-venv`.
+  - For other machines: `python -m venv .venv` (from `backend/`), then activate it.
+- Node 20+
+- Optional: [Ollama](https://ollama.com) for the free local provider — `ollama pull llama3.1:8b`
+- API keys:
+  - `ANTHROPIC_API_KEY` — required for the Claude provider
+  - `TAVILY_API_KEY` — optional; the Web Research Agent falls back to DuckDuckGo search if unset
+
+## Setup
+
+### Backend
+
+```bash
+cd E:\curator\backend
+pip install -e .            # into the venv
+copy .env.example .env      # then fill in the keys below
+```
+
+`.env` variables (see `.env.example`): `ANTHROPIC_API_KEY`, `TAVILY_API_KEY`, `DEFAULT_PROVIDER`, `CLAUDE_MODEL`, `CLAUDE_CHEAP_MODEL`, `OLLAMA_MODEL`, `OLLAMA_BASE_URL`, `DB_PATH`, `CHROMA_PATH`, `MAX_SUPERVISOR_TURNS`, `MAX_DEBATE_ROUNDS`.
+
+### Frontend
+
+```bash
+cd E:\curator\frontend
+npm install
+```
+
+`.env.local` (already created for dev): `NEXT_PUBLIC_API_URL=http://localhost:8000`
+
+## Running
+
+**Backend — this machine:**
+
+```bash
+cd E:\curator\backend
+D:\SetUp-files\researchcrew-venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+**Backend — generic:** `cd backend`, activate venv (`.venv\Scripts\activate` or `source .venv/bin/activate`), then `uvicorn app.main:app --reload --port 8000`.
+
+**Frontend:**
+
+```bash
+cd E:\curator\frontend
+npm run dev
+```
+
+Then open http://localhost:3000.
+
+## CLI Usage
+
+From `backend/`, with the venv active:
+
+```bash
+python -m app.run "goal"              # prints the final report
+python -m app.test_web_agent "topic"  # tests the web agent alone
+```
+
+## Testing
+
+```bash
+cd E:\curator\backend
+python -m pytest tests -q
+
+cd E:\curator\frontend
+npm run build
+```
+
+## Ports
+
+| Port | Service |
+|---|---|
+| 8000 | Backend API (FastAPI/uvicorn) |
+| 3000 | Frontend (Next.js dev) |
+| 11434 | Ollama (if used) |
+
+## Repo Layout
+
+```
+curator/
+├── CLAUDE.md
+├── docs/                    # design/architecture docs
+├── backend/
+│   ├── app/
+│   │   ├── main.py          # FastAPI app + SSE
+│   │   ├── graph.py         # LangGraph build
+│   │   ├── state.py         # ResearchState
+│   │   ├── agents/          # supervisor, web, data, coding, writing, critic, synthesis
+│   │   ├── tools/           # search, fetch, python_exec
+│   │   ├── llm.py           # provider factory (claude | ollama)
+│   │   ├── memory.py        # ChromaDB wrapper
+│   │   └── db.py            # SQLite models
+│   └── pyproject.toml
+└── frontend/
+    ├── app/                  # dashboard, run pages
+    ├── components/
+    └── tailwind.config.ts
+```
+
+## Provider Switching
+
+Claude vs. Ollama can be toggled per-run from the dashboard's provider toggle in the UI. The backend's default provider (used when not overridden) is set via `DEFAULT_PROVIDER` in `backend/.env`.

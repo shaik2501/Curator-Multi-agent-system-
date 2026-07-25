@@ -1,0 +1,34 @@
+[project]
+name = "researchcrew-backend"
+version = "0.1.0"
+description = "Curator multi-agent research backend"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph",
+    "langchain",
+    "langchain-anthropic",
+    "langchain-ollama",
+    "langchain-openai",
+    "langchain-google-genai",
+    "fastapi",
+    "uvicorn[standard]",
+    "sse-starlette",
+    "chromadb",
+    "sqlmodel",
+    "tavily-python",
+    "ddgs",
+    "httpx",
+    "beautifulsoup4",
+    "pydantic",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app", "app.agents", "app.tools"]
