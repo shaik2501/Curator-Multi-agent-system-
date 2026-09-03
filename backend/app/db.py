@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select, func
 
 from app.config import settings
 
@@ -175,8 +175,7 @@ def get_run(run_id: str) -> Optional[Run]:
 
 def list_runs() -> list[Run]:
     with Session(get_engine()) as session:
-        runs = list(session.exec(select(Run).order_by(Run.created_at.desc())))
-        return [_normalize_run(r) for r in runs]
+        return [_normalize_run(r) for r in session.exec(select(Run).order_by(Run.created_at.desc()))]
 
 
 def next_event_seq(run_id: str) -> int:
@@ -205,8 +204,7 @@ def get_events(run_id: str, after_id: Optional[int] = None) -> list[Event]:
         query = select(Event).where(Event.run_id == run_id)
         if after_id is not None:
             query = query.where(Event.id > after_id)
-        events = list(session.exec(query.order_by(Event.seq)))
-        return [_normalize_event(e) for e in events]
+        return [_normalize_event(e) for e in session.exec(query.order_by(Event.seq))]
 
 
 def persist_note(run_id: str, agent: str, content: str, sources: list[str]) -> NoteRecord:
@@ -244,13 +242,12 @@ def get_llm_config(config_id: str) -> Optional[LLMConfig]:
 
 def list_llm_configs() -> list[LLMConfig]:
     with Session(get_engine()) as session:
-        configs = list(session.exec(select(LLMConfig).order_by(LLMConfig.created_at)))
-        return [_normalize_llm_config(c) for c in configs]
+        return [_normalize_llm_config(c) for c in session.exec(select(LLMConfig).order_by(LLMConfig.created_at))]
 
 
 def count_llm_configs() -> int:
     with Session(get_engine()) as session:
-        return len(list(session.exec(select(LLMConfig))))
+        return session.exec(select(func.count(LLMConfig.id))).one()
 
 
 def update_llm_config_status(
