@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Dict, Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +28,16 @@ from app.state import AGENT_ROLES
 # arbitrary endpoint).
 _AUTO_IMAGE_CAPABLE_PROVIDERS = {"openai": True, "gemini": True, "claude": False, "ollama": False}
 
-app = FastAPI(title="Curator Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.init_db()
+    # One-time seed from .env so a previously-working setup (e.g. a real
+    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
+    # .env provider vars are never read again at run time.
+    seed_from_env_if_empty()
+    yield
+
+app = FastAPI(title="Curator Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,14 +47,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    db.init_db()
-    # One-time seed from .env so a previously-working setup (e.g. a real
-    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
-    # .env provider vars are never read again at run time.
-    seed_from_env_if_empty()
 
 
 @app.get("/health")
