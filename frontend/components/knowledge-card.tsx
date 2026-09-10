@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -50,7 +51,7 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
+              <Image width={0} height={0} sizes="100vw" style={{width: "100%", height: "auto"}} unoptimized={true}
                 src={imageSrc}
                 alt=""
                 onLoad={() => setImgStatus("loaded")}
