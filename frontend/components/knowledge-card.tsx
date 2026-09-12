@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import type { KnowledgeEntry, NoteSource } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api";
@@ -50,12 +51,16 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
+              <Image
                 src={imageSrc}
                 alt=""
+                width={0}
+                height={0}
+                sizes="100vw"
+                unoptimized={true}
                 onLoad={() => setImgStatus("loaded")}
                 onError={() => setImgStatus("error")}
-                className={`max-h-56 w-full object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
+                className={`max-h-56 w-full h-auto object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
               />
             </>
           )}

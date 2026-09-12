@@ -26,6 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${jbMono.variable}`}>
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <head>
         {/* Geist (headlines/display) loaded via <link>, per the reference
             mockups — next/font/google in this Next 14 version doesn't
@@ -33,11 +34,13 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
           rel="stylesheet"
+          precedence="default"
         />
         {/* Material Symbols Outlined (variable font) for all icons. */}
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
+          precedence="default"
         />
       </head>
       <body className="min-h-screen bg-background text-on-surface font-body-md text-body-md antialiased">
