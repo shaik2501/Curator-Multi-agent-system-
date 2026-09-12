@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
+import Image from "next/image";
 import { AGENT_TEAM } from "@/lib/types";
 import type { AgentKey, AgentState } from "@/lib/types";
 import { cn, hexToRgba } from "@/lib/utils";
@@ -45,9 +46,12 @@ function CardImage({ src }: { src: string }) {
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          <Image
             src={fullSrc}
             alt=""
+            width={500}
+            height={500}
+            unoptimized={true}
             onLoad={() => setStatus("loaded")}
             onError={() => setStatus("error")}
             className={cn(
