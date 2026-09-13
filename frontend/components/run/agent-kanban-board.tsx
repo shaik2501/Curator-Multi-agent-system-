@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { AGENT_TEAM } from "@/lib/types";
+import Image from "next/image";
 import type { AgentKey, AgentState } from "@/lib/types";
 import { cn, hexToRgba } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
@@ -45,16 +46,17 @@ function CardImage({ src }: { src: string }) {
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
-            src={fullSrc}
-            alt=""
-            onLoad={() => setStatus("loaded")}
-            onError={() => setStatus("error")}
-            className={cn(
-              "w-full max-h-48 object-contain",
-              status === "loading" && "hidden",
-            )}
-          />
+          <div className={cn("relative w-full h-48", status === "loading" && "opacity-0 absolute")}>
+            <Image
+              src={fullSrc}
+              alt=""
+              fill
+              unoptimized={true}
+              onLoad={() => setStatus("loaded")}
+              onError={() => setStatus("error")}
+              className="object-contain"
+            />
+          </div>
         </>
       )}
     </div>

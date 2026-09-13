@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +28,16 @@ from app.state import AGENT_ROLES
 # arbitrary endpoint).
 _AUTO_IMAGE_CAPABLE_PROVIDERS = {"openai": True, "gemini": True, "claude": False, "ollama": False}
 
-app = FastAPI(title="Curator Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    db.init_db()
+    # One-time seed from .env so a previously-working setup (e.g. a real
+    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
+    # .env provider vars are never read again at run time.
+    seed_from_env_if_empty()
+    yield
+
+app = FastAPI(title="Curator Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,25 +47,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    db.init_db()
-    # One-time seed from .env so a previously-working setup (e.g. a real
-    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
-    # .env provider vars are never read again at run time.
-    seed_from_env_if_empty()
-
-
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
 
-
 # ---------------------------------------------------------------------------
 # LLM configs — dynamic, user-managed credentials
 # ---------------------------------------------------------------------------
-
 
 class LLMConfigRequest(BaseModel):
     label: Optional[str] = None
@@ -67,7 +65,6 @@ class LLMConfigRequest(BaseModel):
     # Only meaningful for provider_type="custom" — for every other type,
     # image capability is inferred automatically and this is ignored.
     image_capable: Optional[bool] = None
-
 
 @app.post("/api/llm-configs")
 async def create_llm_config(payload: LLMConfigRequest) -> dict:
@@ -123,17 +120,14 @@ async def create_llm_config(payload: LLMConfigRequest) -> dict:
     verified = await asyncio.to_thread(verify_config, created)
     return to_public_dict(verified)
 
-
 @app.get("/api/llm-configs")
 def list_llm_configs() -> list[dict]:
     return [to_public_dict(c) for c in db.list_llm_configs()]
-
 
 class ListModelsRequest(BaseModel):
     provider_type: str
     api_key: Optional[str] = None
     base_url: Optional[str] = None
-
 
 @app.post("/api/llm-configs/list-models")
 async def list_llm_config_models(payload: ListModelsRequest) -> dict:
@@ -150,7 +144,6 @@ async def list_llm_config_models(payload: ListModelsRequest) -> dict:
     )
     return result.to_dict()
 
-
 @app.post("/api/llm-configs/{config_id}/verify")
 async def verify_llm_config(config_id: str) -> dict:
     config = db.get_llm_config(config_id)
@@ -159,7 +152,6 @@ async def verify_llm_config(config_id: str) -> dict:
     verified = await asyncio.to_thread(verify_config, config)
     return to_public_dict(verified)
 
-
 @app.delete("/api/llm-configs/{config_id}")
 def delete_llm_config(config_id: str) -> dict:
     deleted = db.delete_llm_config(config_id)
@@ -167,20 +159,16 @@ def delete_llm_config(config_id: str) -> dict:
         raise HTTPException(status_code=404, detail="llm config not found")
     return {"id": config_id, "deleted": True}
 
-
 # ---------------------------------------------------------------------------
 # Runs
 # ---------------------------------------------------------------------------
-
 
 class StartRunRequest(BaseModel):
     goal: str
     agent_configs: Dict[str, str]
 
-
 class StartRunResponse(BaseModel):
     run_id: str
-
 
 def _resolve_agent_model_snapshot(agent_configs: Dict[str, str]) -> dict:
     """Validate that `agent_configs` has exactly the 7 required role keys,
@@ -221,7 +209,6 @@ def _resolve_agent_model_snapshot(agent_configs: Dict[str, str]) -> dict:
         }
     return snapshot
 
-
 @app.post("/api/runs", response_model=StartRunResponse)
 async def create_run(payload: StartRunRequest) -> StartRunResponse:
     if not payload.goal or not payload.goal.strip():
@@ -234,7 +221,6 @@ async def create_run(payload: StartRunRequest) -> StartRunResponse:
     resolved_agent_configs = {role: snapshot[role]["config_id"] for role in AGENT_ROLES}
     await start_run(run_id, payload.goal, resolved_agent_configs)
     return StartRunResponse(run_id=run_id)
-
 
 @app.get("/api/runs")
 def list_runs() -> list[dict]:
@@ -250,7 +236,6 @@ def list_runs() -> list[dict]:
         }
         for r in runs
     ]
-
 
 @app.get("/api/runs/{run_id}")
 def get_run(run_id: str) -> dict:
@@ -268,7 +253,6 @@ def get_run(run_id: str) -> dict:
         "updated_at": run.updated_at.isoformat(),
     }
 
-
 @app.post("/api/runs/{run_id}/stop")
 async def stop_run(run_id: str) -> dict:
     run = db.get_run(run_id)
@@ -282,11 +266,9 @@ async def stop_run(run_id: str) -> dict:
     task.cancel()
     return {"id": run_id, "status": "stopping"}
 
-
 # ---------------------------------------------------------------------------
 # Settings
 # ---------------------------------------------------------------------------
-
 
 @app.get("/api/settings")
 async def get_settings() -> dict:
@@ -296,7 +278,6 @@ async def get_settings() -> dict:
         "max_searches_per_run": settings.max_searches_per_run,
     }
 
-
 @app.post("/api/providers/ollama/check")
 async def check_ollama() -> dict:
     """Fresh, uncached live reachability check against the default Ollama
@@ -304,7 +285,6 @@ async def check_ollama() -> dict:
     specific saved config. Reuses check_ollama_reachable's short timeout."""
     reachable = await asyncio.to_thread(check_ollama_reachable)
     return {"reachable": reachable}
-
 
 @app.get("/api/images/{run_id}/{filename}")
 def get_image(run_id: str, filename: str) -> FileResponse:
@@ -319,7 +299,6 @@ def get_image(run_id: str, filename: str) -> FileResponse:
 
     return FileResponse(candidate, media_type="image/png")
 
-
 @app.get("/api/runs/{run_id}/knowledge")
 def get_knowledge(run_id: str) -> list[dict]:
     run = db.get_run(run_id)
@@ -327,7 +306,6 @@ def get_knowledge(run_id: str) -> list[dict]:
         raise HTTPException(status_code=404, detail="run not found")
     hits = memory.get_all_notes(run_id)
     return [{"agent": h["agent"], "content": h["content"], "sources": h["sources"]} for h in hits]
-
 
 @app.get("/api/runs/{run_id}/events")
 async def stream_events(run_id: str, request: Request):
