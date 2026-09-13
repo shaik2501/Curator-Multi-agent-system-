@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { AGENT_TEAM } from "@/lib/types";
@@ -32,7 +33,7 @@ function CardImage({ src }: { src: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const fullSrc = src.startsWith("http") ? src : `${API_BASE_URL}${src}`;
   return (
-    <div className="relative mb-1.5 overflow-hidden rounded-md bg-surface-container-lowest">
+    <div className="relative mb-1.5 overflow-hidden rounded-md bg-surface-container-lowest min-h-[96px] flex items-center justify-center">
       {status === "error" ? (
         <div className="flex h-24 flex-col items-center justify-center gap-1 text-on-surface-variant/50">
           <Icon name="broken_image" className="text-[18px]" />
@@ -41,20 +42,21 @@ function CardImage({ src }: { src: string }) {
       ) : (
         <>
           {status === "loading" && (
-            <div className="flex h-24 items-center justify-center">
+            <div className="flex h-24 items-center justify-center absolute inset-0 z-10">
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
-            src={fullSrc}
-            alt=""
-            onLoad={() => setStatus("loaded")}
-            onError={() => setStatus("error")}
-            className={cn(
-              "w-full max-h-48 object-contain",
-              status === "loading" && "hidden",
-            )}
-          />
+          <div className={`relative w-full h-48 ${status === "loading" ? "opacity-0" : "opacity-100"}`}>
+            <Image
+              src={fullSrc}
+              alt=""
+              fill
+              unoptimized={true}
+              onLoad={() => setStatus("loaded")}
+              onError={() => setStatus("error")}
+              className="object-contain"
+            />
+          </div>
         </>
       )}
     </div>
