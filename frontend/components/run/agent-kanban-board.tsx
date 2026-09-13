@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
+import Image from "next/image";
 import { AGENT_TEAM } from "@/lib/types";
 import type { AgentKey, AgentState } from "@/lib/types";
 import { cn, hexToRgba } from "@/lib/utils";
@@ -39,23 +40,25 @@ function CardImage({ src }: { src: string }) {
           <p className="text-[10px]">Image unavailable</p>
         </div>
       ) : (
-        <>
+        <div className="relative w-full h-48">
           {status === "loading" && (
-            <div className="flex h-24 items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          <Image
+            unoptimized={true}
+            fill={true}
             src={fullSrc}
             alt=""
             onLoad={() => setStatus("loaded")}
             onError={() => setStatus("error")}
             className={cn(
-              "w-full max-h-48 object-contain",
-              status === "loading" && "hidden",
+              "object-contain",
+              status === "loading" && "opacity-0 absolute",
             )}
           />
-        </>
+        </div>
       )}
     </div>
   );
