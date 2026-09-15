@@ -394,7 +394,11 @@ def test_full_run_smoke_resolves_each_role_to_its_own_config(monkeypatch):
     def fake_build_client(config):
         return RecordingFakeLLM(config.id)
 
+    def fake_search_web(*args, **kwargs):
+        return [{"title": "t", "url": "u", "snippet": "s"}]
+
     monkeypatch.setattr("app.llm._build_client", fake_build_client)
+    monkeypatch.setattr("app.tools.search.search_web", fake_search_web)
 
     run_id = "test-per-role-smoke-run"
     db.create_run(run_id, "goal", make_snapshot(config_a))  # snapshot content unused by the graph

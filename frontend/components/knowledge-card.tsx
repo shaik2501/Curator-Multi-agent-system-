@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import type { KnowledgeEntry, NoteSource } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 function normalizeSources(sources?: NoteSource[] | string[]): NoteSource[] {
   if (!sources) return [];
@@ -37,25 +39,30 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
       </div>
 
       {imageSrc && (
-        <div className="relative mb-2 overflow-hidden rounded-md bg-surface-container-lowest">
+        <div className="relative mb-2 h-56 w-full overflow-hidden rounded-md bg-surface-container-lowest">
           {imgStatus === "error" ? (
-            <div className="flex h-24 flex-col items-center justify-center gap-1 text-on-surface-variant/50">
+            <div className="flex h-full flex-col items-center justify-center gap-1 text-on-surface-variant/50">
               <Icon name="broken_image" className="text-[18px]" />
               <p className="text-[10px]">Image unavailable</p>
             </div>
           ) : (
             <>
               {imgStatus === "loading" && (
-                <div className="flex h-24 items-center justify-center">
+                <div className="flex h-full items-center justify-center">
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
+              <Image
                 src={imageSrc}
                 alt=""
+                fill
+                unoptimized={true}
                 onLoad={() => setImgStatus("loaded")}
                 onError={() => setImgStatus("error")}
-                className={`max-h-56 w-full object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
+                className={cn(
+                  "object-contain",
+                  imgStatus === "loading" ? "opacity-0" : "opacity-100"
+                )}
               />
             </>
           )}
