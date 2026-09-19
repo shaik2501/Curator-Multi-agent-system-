@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { AGENT_TEAM } from "@/lib/types";
@@ -41,20 +42,21 @@ function CardImage({ src }: { src: string }) {
       ) : (
         <>
           {status === "loading" && (
-            <div className="flex h-24 items-center justify-center">
+            <div className="flex h-24 items-center justify-center relative">
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
-            src={fullSrc}
-            alt=""
-            onLoad={() => setStatus("loaded")}
-            onError={() => setStatus("error")}
-            className={cn(
-              "w-full max-h-48 object-contain",
-              status === "loading" && "hidden",
-            )}
-          />
+          <div className={cn("relative w-full h-48", status === "loading" && "opacity-0 absolute inset-0")}>
+            <Image
+              unoptimized={true}
+              fill={true}
+              src={fullSrc}
+              alt=""
+              onLoad={() => setStatus("loaded")}
+              onError={() => setStatus("error")}
+              className="object-contain"
+            />
+          </div>
         </>
       )}
     </div>
