@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { AGENT_TEAM } from "@/lib/types";
@@ -32,27 +33,29 @@ function CardImage({ src }: { src: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const fullSrc = src.startsWith("http") ? src : `${API_BASE_URL}${src}`;
   return (
-    <div className="relative mb-1.5 overflow-hidden rounded-md bg-surface-container-lowest">
+    <div className="relative mb-1.5 h-48 w-full overflow-hidden rounded-md bg-surface-container-lowest">
       {status === "error" ? (
-        <div className="flex h-24 flex-col items-center justify-center gap-1 text-on-surface-variant/50">
+        <div className="flex h-full flex-col items-center justify-center gap-1 text-on-surface-variant/50">
           <Icon name="broken_image" className="text-[18px]" />
           <p className="text-[10px]">Image unavailable</p>
         </div>
       ) : (
         <>
           {status === "loading" && (
-            <div className="flex h-24 items-center justify-center">
+            <div className="flex h-full items-center justify-center">
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          <Image
             src={fullSrc}
             alt=""
+            fill
+            unoptimized={true}
             onLoad={() => setStatus("loaded")}
             onError={() => setStatus("error")}
             className={cn(
-              "w-full max-h-48 object-contain",
-              status === "loading" && "hidden",
+              "object-contain",
+              status === "loading" ? "opacity-0" : "opacity-100"
             )}
           />
         </>
