@@ -50,6 +50,7 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageSrc}
                 alt=""
