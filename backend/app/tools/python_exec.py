@@ -35,9 +35,21 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
+    # Inject an audit hook to block network access at the Python level
+    # since we don't have OS-level network isolation.
+    injected_code = (
+        "import sys\n"
+        "def _audit_hook(event, args):\n"
+        "    if event.startswith('socket.'):\n"
+        "        raise PermissionError('Network access is blocked in the sandbox')\n"
+        "sys.addaudithook(_audit_hook)\n"
+        "del sys\n"
+        "del _audit_hook\n"
+    ) + code
+
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
-        script_path.write_text(code, encoding="utf-8")
+        script_path.write_text(injected_code, encoding="utf-8")
 
         env = {
             k: v
