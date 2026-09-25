@@ -37,7 +37,14 @@ def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
-        script_path.write_text(code, encoding="utf-8")
+        audit_code = (
+            "import sys\n"
+            "def audit_hook(name, args):\n"
+            "    if name == 'socket.connect' or name == 'socket.getaddrinfo':\n"
+            "        raise PermissionError('Network access is blocked')\n"
+            "sys.addaudithook(audit_hook)\n\n"
+        )
+        script_path.write_text(audit_code + code, encoding="utf-8")
 
         env = {
             k: v
