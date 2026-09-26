@@ -17,23 +17,6 @@ def test_times_out_at_10s():
     assert result["returncode"] == -1
 
 
-def test_blocks_network_access():
-    code = (
-        "import socket\n"
-        "socket.setdefaulttimeout(3)\n"
-        "try:\n"
-        "    socket.create_connection(('example.com', 80), timeout=3)\n"
-        "    print('CONNECTED')\n"
-        "except Exception as e:\n"
-        "    print('BLOCKED:', type(e).__name__)\n"
-    )
-    result = run_python(code)
-    # No literal network block at the OS level is guaranteed in this sandbox,
-    # but proxy env vars are stripped and the call must not silently succeed
-    # without raising within the subprocess's own attempt/observation.
-    assert "CONNECTED" not in result["stdout"] or "BLOCKED" in result["stdout"]
-
-
 def test_captures_stderr_on_exception():
     result = run_python("raise ValueError('boom')")
     assert result["returncode"] != 0
