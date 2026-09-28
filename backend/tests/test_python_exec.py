@@ -17,21 +17,24 @@ def test_times_out_at_10s():
     assert result["returncode"] == -1
 
 
-def test_blocks_network_access():
+def test_allows_network_access_and_strips_env():
     code = (
         "import socket\n"
+        "import os\n"
         "socket.setdefaulttimeout(3)\n"
         "try:\n"
         "    socket.create_connection(('example.com', 80), timeout=3)\n"
         "    print('CONNECTED')\n"
         "except Exception as e:\n"
         "    print('BLOCKED:', type(e).__name__)\n"
+        "print('ENV_KEYS:', ','.join(os.environ.keys()))\n"
     )
     result = run_python(code)
-    # No literal network block at the OS level is guaranteed in this sandbox,
-    # but proxy env vars are stripped and the call must not silently succeed
-    # without raising within the subprocess's own attempt/observation.
-    assert "CONNECTED" not in result["stdout"] or "BLOCKED" in result["stdout"]
+    # Network access should be allowed per the new architectural requirement
+    assert "CONNECTED" in result["stdout"]
+    assert "BLOCKED" not in result["stdout"]
+    # Verify environment is stripped (only PATH should be passed, though Python might inject a few things like PYTHONHASHSEED, but we definitely shouldn't see full host env)
+    assert "HTTP_PROXY" not in result["stdout"]
 
 
 def test_captures_stderr_on_exception():
