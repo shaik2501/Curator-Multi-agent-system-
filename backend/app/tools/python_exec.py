@@ -37,20 +37,28 @@ def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
+
         script_path.write_text(code, encoding="utf-8")
 
-        env = {
-            k: v
-            for k, v in __import__("os").environ.items()
-            if k not in _NETWORK_ENV_KEYS_TO_STRIP
-        }
-        # Minimize inherited environment further while keeping PATH so the
+        wrapper_code = (
+            "import sys\n"
+            "def _audit_hook(event, args):\n"
+            "    if event.startswith('socket.'):\n"
+            "        raise PermissionError('Network access is blocked in the sandbox')\n"
+            "sys.addaudithook(_audit_hook)\n"
+            "import runpy\n"
+            "runpy.run_path('snippet.py', run_name='__main__')\n"
+        )
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
+        # Minimize inherited environment while keeping PATH so the
         # interpreter itself can be located.
-        env = {"PATH": env.get("PATH", "")}
+        env = {"PATH": __import__("os").environ.get("PATH", "")}
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", "wrapper.py"],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
