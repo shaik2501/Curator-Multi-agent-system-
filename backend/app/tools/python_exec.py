@@ -48,9 +48,19 @@ def run_python(code: str) -> ExecResult:
         # interpreter itself can be located.
         env = {"PATH": env.get("PATH", "")}
 
+        wrapper = (
+            "import sys\n"
+            "def hook(event, args):\n"
+            "    if event.startswith('socket.'):\n"
+            "        raise RuntimeError('Network access is blocked in sandbox')\n"
+            "sys.addaudithook(hook)\n"
+            "import runpy\n"
+            f"runpy.run_path({str(script_path.name)!r}, run_name='__main__')\n"
+        )
+
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", "-c", wrapper],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
