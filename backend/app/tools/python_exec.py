@@ -49,8 +49,19 @@ def run_python(code: str) -> ExecResult:
         env = {"PATH": env.get("PATH", "")}
 
         try:
+            cmd = [
+                sys.executable,
+                "-I",
+                "-c",
+                "import sys\n"
+                "def audit_hook(event, args):\n"
+                "    if event == 'socket.connect': raise PermissionError('Network access is disabled')\n"
+                "sys.addaudithook(audit_hook)\n"
+                "import runpy; runpy.run_path(sys.argv[1], run_name='__main__')",
+                str(script_path),
+            ]
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                cmd,
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
