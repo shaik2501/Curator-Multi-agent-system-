@@ -5,6 +5,7 @@ Runs untrusted code in a subprocess: 10s timeout, temp-dir cwd, no network
 """
 from __future__ import annotations
 
+import ast
 import subprocess
 import sys
 import tempfile
@@ -33,11 +34,39 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 }
 
 
+def _inject_audit_hook(code: str) -> str:
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code
+
+    insert_line = 1
+    for node in tree.body:
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            insert_line = node.end_lineno + 1
+        elif isinstance(node, ast.ImportFrom) and node.module == "__future__":
+            insert_line = node.end_lineno + 1
+        else:
+            break
+
+    lines = code.split("\n")
+    hook_lines = [
+        "import sys as __sys",
+        "def __sandbox_audit_hook(event, args):",
+        "    if event.startswith('socket.'):",
+        "        raise RuntimeError('Network access is blocked')",
+        "__sys.addaudithook(__sandbox_audit_hook)"
+    ]
+
+    idx = insert_line - 1
+    return "\n".join(lines[:idx] + hook_lines + lines[idx:])
+
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
+    code_with_hook = _inject_audit_hook(code)
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
-        script_path.write_text(code, encoding="utf-8")
+        script_path.write_text(code_with_hook, encoding="utf-8")
 
         env = {
             k: v
