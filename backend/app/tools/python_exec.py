@@ -50,7 +50,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", "-c", "import sys; sys.addaudithook(lambda e, a: exec(\"raise PermissionError('Network access is blocked')\") if e in ('socket.connect', 'socket.bind') else None); import runpy; runpy.run_path(sys.argv[1], run_name='__main__')", str(script_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
