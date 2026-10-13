@@ -35,6 +35,26 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
+    _ISOLATION_HOOK = (
+        "import sys\n"
+        "def __audit_hook(name, args):\n"
+        "    if name == 'socket.connect':\n"
+        "        raise PermissionError('Network access is blocked in sandbox')\n"
+        "sys.addaudithook(__audit_hook)\n\n"
+    )
+
+    lines = code.split('\n')
+    future_imports = []
+    rest = []
+
+    for line in lines:
+        if line.startswith('from __future__ import'):
+            future_imports.append(line)
+        else:
+            rest.append(line)
+
+    code = '\n'.join(future_imports) + ('\n' if future_imports else '') + _ISOLATION_HOOK + '\n'.join(rest)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
