@@ -39,6 +39,24 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        # Prepend the audit hook script before the actual code execution
+        # using the -c flag and then importing/running the main script,
+        # preserving the actual file execution mechanics.
+        # Actually, python -c "..." snippet.py does not execute snippet.py unless we do runpy.
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_code = f"""import sys
+import runpy
+def _audit_hook(event, args):
+    if event.startswith('socket.'):
+        raise PermissionError('Network access is disabled')
+sys.addaudithook(_audit_hook)
+
+# Execute the script cleanly, maintaining __file__ and standard execution semantics.
+sys.argv = ['{script_path.name}']
+runpy.run_path('{script_path.name}', run_name='__main__')
+"""
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +68,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
