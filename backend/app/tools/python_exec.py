@@ -33,8 +33,41 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 }
 
 
+def _inject_audit_hook(code: str) -> str:
+    """Injects a sys.addaudithook call to block socket connections.
+    It carefully injects the hook after any __future__ imports so as not to cause SyntaxErrors.
+    """
+    hook_code = '''
+import sys
+def block_network_audit_hook(event, args):
+    if event == "socket.connect":
+        raise PermissionError("Network access is blocked in this sandbox.")
+sys.addaudithook(block_network_audit_hook)
+'''
+    lines = code.splitlines(keepends=True)
+    future_imports = []
+    rest_of_code = []
+
+    for i, line in enumerate(lines):
+        # basic detection for __future__ imports
+        if line.strip().startswith("from __future__ import"):
+            future_imports.append(line)
+        elif not line.strip() or line.strip().startswith("#"):
+            # Put comments/blank lines leading up to the rest into future_imports if we haven't started rest_of_code yet
+            if not rest_of_code:
+                future_imports.append(line)
+            else:
+                rest_of_code.append(line)
+        else:
+            rest_of_code = lines[i:]
+            break
+
+    return "".join(future_imports) + hook_code + "".join(rest_of_code)
+
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
+    code = _inject_audit_hook(code)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
