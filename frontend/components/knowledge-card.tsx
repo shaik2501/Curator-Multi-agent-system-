@@ -13,7 +13,9 @@ function normalizeSources(sources?: NoteSource[] | string[]): NoteSource[] {
 export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
   const sources = normalizeSources(entry.sources);
   const agentLabel = (entry.agent ?? "agent").toUpperCase();
-  const [imgStatus, setImgStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [imgStatus, setImgStatus] = useState<"loading" | "loaded" | "error">(
+    "loading",
+  );
   const imageSrc = entry.image_url
     ? entry.image_url.startsWith("http")
       ? entry.image_url
@@ -47,9 +49,13 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
             <>
               {imgStatus === "loading" && (
                 <div className="flex h-24 items-center justify-center">
-                  <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
+                  <Icon
+                    name="sync"
+                    className="animate-spin text-[18px] text-on-surface-variant/50"
+                  />
                 </div>
               )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageSrc}
                 alt=""

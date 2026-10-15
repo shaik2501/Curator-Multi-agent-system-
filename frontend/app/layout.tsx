@@ -27,15 +27,19 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${jbMono.variable}`}>
       <head>
-        {/* Geist (headlines/display) loaded via <link>, per the reference
+        {/* Geist (headlines/display) loaded via link, per the reference
             mockups — next/font/google in this Next 14 version doesn't
             export "Geist" the way it does Inter/JetBrains Mono. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
+          precedence="default"
           href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
           rel="stylesheet"
         />
         {/* Material Symbols Outlined (variable font) for all icons. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
+          precedence="default"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
