@@ -39,6 +39,19 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        # Use runpy wrapper to avoid mutating source file and breaking __future__ imports
+        wrapper_code = (
+            "import sys\n"
+            "def deny_network(event, args):\n"
+            "    if event == 'socket.connect':\n"
+            "        raise RuntimeError('Network access is blocked')\n"
+            "sys.addaudithook(deny_network)\n"
+            "import runpy\n"
+            "runpy.run_path(sys.argv[1], run_name='__main__')\n"
+        )
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +63,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path), str(script_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
