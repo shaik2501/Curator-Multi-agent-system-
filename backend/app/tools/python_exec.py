@@ -36,8 +36,31 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        script_path = Path(tmpdir) / "snippet.py"
-        script_path.write_text(code, encoding="utf-8")
+        snippet_path = Path(tmpdir) / "snippet.py"
+        snippet_path.write_text(code, encoding="utf-8")
+
+        wrapper_path = Path(tmpdir) / "runner.py"
+        wrapper_code = """
+import sys
+import runpy
+import traceback
+
+def audit_hook(event, args):
+    if event == "socket.__new__":
+        raise PermissionError("Network access is blocked")
+    if event.startswith("socket."):
+        raise PermissionError("Network access is blocked")
+
+sys.addaudithook(audit_hook)
+
+try:
+    runpy.run_path("snippet.py", run_name="__main__")
+except Exception:
+    # Print the full exception traceback to stderr if it bubbles up
+    traceback.print_exc(file=sys.stderr)
+    sys.exit(1)
+"""
+        wrapper_path.write_text(wrapper_code.strip(), encoding="utf-8")
 
         env = {
             k: v
@@ -50,7 +73,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
