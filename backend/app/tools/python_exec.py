@@ -35,6 +35,17 @@ _NETWORK_ENV_KEYS_TO_STRIP = {
 
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
+    # Inject a sys.addaudithook to explicitly block socket operations
+    # (prevents network access).
+    audit_hook_code = (
+        "import sys\n"
+        "def _block_network(event, args):\n"
+        "    if event.startswith('socket.'):\n"
+        "        raise PermissionError('Network access is blocked in this sandbox.')\n"
+        "sys.addaudithook(_block_network)\n"
+    )
+    code = audit_hook_code + code
+
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
