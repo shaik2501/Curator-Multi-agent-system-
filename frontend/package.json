@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "framer-motion": "^12.42.2",
-    "lucide-react": "^1.26.0",
-    "next": "14.2.35",
-    "react": "^18",
-    "react-dom": "^18",
+    "framer-motion": "^13.2.0",
+    "lucide-react": "^1.43.0",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.6.0"
   },
