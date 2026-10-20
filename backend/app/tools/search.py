@@ -46,29 +46,25 @@ def _search_tavily(query: str, max_results: int) -> List[SearchResult]:
 
     client = TavilyClient(api_key=settings.tavily_api_key)
     resp = client.search(query=query, max_results=max_results)
-    results: List[SearchResult] = []
-    for item in resp.get("results", []):
-        results.append(
-            SearchResult(
-                title=item.get("title", ""),
-                url=item.get("url", ""),
-                snippet=item.get("content", ""),
-            )
+    return [
+        SearchResult(
+            title=item.get("title", ""),
+            url=item.get("url", ""),
+            snippet=item.get("content", ""),
         )
-    return results
+        for item in resp.get("results", [])
+    ]
 
 
 def _search_ddg(query: str, max_results: int) -> List[SearchResult]:
     from ddgs import DDGS
 
-    results: List[SearchResult] = []
     with DDGS() as ddgs:
-        for item in ddgs.text(query, max_results=max_results):
-            results.append(
-                SearchResult(
-                    title=item.get("title", ""),
-                    url=item.get("href", item.get("url", "")),
-                    snippet=item.get("body", ""),
-                )
+        return [
+            SearchResult(
+                title=item.get("title", ""),
+                url=item.get("href", item.get("url", "")),
+                snippet=item.get("body", ""),
             )
-    return results
+            for item in ddgs.text(query, max_results=max_results)
+        ]
