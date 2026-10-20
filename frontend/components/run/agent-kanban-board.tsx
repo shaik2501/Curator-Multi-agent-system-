@@ -45,7 +45,8 @@ function CardImage({ src }: { src: string }) {
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
             src={fullSrc}
             alt=""
             onLoad={() => setStatus("loaded")}
