@@ -59,7 +59,7 @@ def _search_tavily(query: str, max_results: int) -> List[SearchResult]:
 
 
 def _search_ddg(query: str, max_results: int) -> List[SearchResult]:
-    from ddgs import DDGS
+    from duckduckgo_search import DDGS
 
     results: List[SearchResult] = []
     with DDGS() as ddgs:
