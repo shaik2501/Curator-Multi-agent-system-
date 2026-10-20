@@ -202,7 +202,7 @@ export default function RunClient({ runId }: { runId: string }) {
       unsubscribe();
       unsubscribeRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
   }, [runId, loadError]);
 
   const setAgentState = useCallback((agent: string | undefined, state: AgentState) => {
@@ -350,7 +350,7 @@ export default function RunClient({ runId }: { runId: string }) {
         break;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
   }, []);
 
   const handleStop = async () => {
