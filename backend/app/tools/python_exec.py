@@ -39,6 +39,19 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        wrapper_code = f"""
+import sys
+def block_network(event, args):
+    if event.startswith("socket."):
+        raise RuntimeError(f"Network access blocked: {{event}}")
+sys.addaudithook(block_network)
+
+import runpy
+runpy.run_path({str(script_path)!r}, run_name="__main__")
+"""
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +63,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
