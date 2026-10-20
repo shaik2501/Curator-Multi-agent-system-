@@ -18,3 +18,13 @@ def _tmp_db(tmp_path, monkeypatch):
     db.init_db()
     yield
     db_module._engine = None
+
+@pytest.fixture(autouse=True)
+def mock_search_web(monkeypatch):
+    from app.tools import search
+    def mock_search(query: str, run_id: str = "default", max_results: int = 5):
+        search._check_and_increment(run_id)
+        return [
+            search.SearchResult(title="Mock Title", url="http://example.com", snippet="Mock snippet")
+        ]
+    monkeypatch.setattr(search, "search_web", mock_search)

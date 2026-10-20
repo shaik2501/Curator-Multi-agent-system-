@@ -29,7 +29,9 @@ export interface KanbanCard {
 }
 
 function CardImage({ src }: { src: string }) {
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">(
+    "loading",
+  );
   const fullSrc = src.startsWith("http") ? src : `${API_BASE_URL}${src}`;
   return (
     <div className="relative mb-1.5 overflow-hidden rounded-md bg-surface-container-lowest">
@@ -42,9 +44,13 @@ function CardImage({ src }: { src: string }) {
         <>
           {status === "loading" && (
             <div className="flex h-24 items-center justify-center">
-              <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
+              <Icon
+                name="sync"
+                className="animate-spin text-[18px] text-on-surface-variant/50"
+              />
             </div>
           )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={fullSrc}
             alt=""
@@ -107,17 +113,27 @@ function Column({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <Icon name={meta.icon} style={{ color: meta.color }} className="shrink-0" />
+            <Icon
+              name={meta.icon}
+              style={{ color: meta.color }}
+              className="shrink-0"
+            />
             <span className="truncate font-headline-sm text-[14px] text-on-surface">
               {meta.name}
             </span>
           </div>
           <div
             className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5"
-            style={{ background: state === "idle" ? undefined : hexToRgba(meta.color, 0.15) }}
+            style={{
+              background:
+                state === "idle" ? undefined : hexToRgba(meta.color, 0.15),
+            }}
           >
             <div
-              className={cn("h-1.5 w-1.5 rounded-full", working && "animate-breathe")}
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                working && "animate-breathe",
+              )}
               style={{ background: state === "idle" ? undefined : meta.color }}
             />
             <span
@@ -156,7 +172,9 @@ function Column({
                     <Icon
                       name={KIND_ICON[card.kind]}
                       className="text-[13px]"
-                      style={{ color: card.kind === "error" ? undefined : meta.color }}
+                      style={{
+                        color: card.kind === "error" ? undefined : meta.color,
+                      }}
                     />
                     <span className="truncate text-[11px] font-bold text-on-surface">
                       {card.title}
