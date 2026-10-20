@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { AGENT_TEAM } from "@/lib/types";
@@ -45,9 +46,12 @@ function CardImage({ src }: { src: string }) {
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          <Image
             src={fullSrc}
             alt=""
+            width={400}
+            height={192}
+            unoptimized={true}
             onLoad={() => setStatus("loaded")}
             onError={() => setStatus("error")}
             className={cn(
