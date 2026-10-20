@@ -1,0 +1,13 @@
+
+> curator-frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 1818ms
+ ○ Compiling / ...
+ ✓ Compiled / in 7.3s (591 modules)
+ GET / 200 in 8253ms
+ ✓ Compiled in 915ms (282 modules)
