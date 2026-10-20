@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import type { KnowledgeEntry, NoteSource } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 function normalizeSources(sources?: NoteSource[] | string[]): NoteSource[] {
   if (!sources) return [];
@@ -50,13 +52,20 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
-                src={imageSrc}
-                alt=""
-                onLoad={() => setImgStatus("loaded")}
-                onError={() => setImgStatus("error")}
-                className={`max-h-56 w-full object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
-              />
+              <div className="relative min-h-[224px] w-full">
+                <Image
+                  src={imageSrc}
+                  alt=""
+                  fill
+                  unoptimized={true}
+                  onLoad={() => setImgStatus("loaded")}
+                  onError={() => setImgStatus("error")}
+                  className={cn(
+                    "object-contain transition-opacity duration-300",
+                    imgStatus === "loading" ? "opacity-0" : "opacity-100",
+                  )}
+                />
+              </div>
             </>
           )}
         </div>
