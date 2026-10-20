@@ -21,32 +21,15 @@ class ExecResult(TypedDict):
     timed_out: bool
 
 
-_NETWORK_ENV_KEYS_TO_STRIP = {
-    "HTTP_PROXY",
-    "HTTPS_PROXY",
-    "ALL_PROXY",
-    "NO_PROXY",
-    "http_proxy",
-    "https_proxy",
-    "all_proxy",
-    "no_proxy",
-}
-
-
 def run_python(code: str) -> ExecResult:
     """Execute `code` in a sandboxed subprocess and return its result."""
     with tempfile.TemporaryDirectory() as tmpdir:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
-        env = {
-            k: v
-            for k, v in __import__("os").environ.items()
-            if k not in _NETWORK_ENV_KEYS_TO_STRIP
-        }
-        # Minimize inherited environment further while keeping PATH so the
-        # interpreter itself can be located.
-        env = {"PATH": env.get("PATH", "")}
+        # Minimize inherited environment to just PATH so the interpreter itself
+        # can be located, inherently stripping proxy env vars.
+        env = {"PATH": __import__("os").environ.get("PATH", "")}
 
         try:
             proc = subprocess.run(
