@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import type { KnowledgeEntry, NoteSource } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api";
@@ -37,7 +38,7 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
       </div>
 
       {imageSrc && (
-        <div className="relative mb-2 overflow-hidden rounded-md bg-surface-container-lowest">
+        <div className="relative mb-2 min-h-[96px] overflow-hidden rounded-md bg-surface-container-lowest flex items-center justify-center">
           {imgStatus === "error" ? (
             <div className="flex h-24 flex-col items-center justify-center gap-1 text-on-surface-variant/50">
               <Icon name="broken_image" className="text-[18px]" />
@@ -46,17 +47,21 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
           ) : (
             <>
               {imgStatus === "loading" && (
-                <div className="flex h-24 items-center justify-center">
+                <div className="flex h-24 items-center justify-center absolute inset-0 z-10">
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
-                src={imageSrc}
-                alt=""
-                onLoad={() => setImgStatus("loaded")}
-                onError={() => setImgStatus("error")}
-                className={`max-h-56 w-full object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
-              />
+              <div className={`relative w-full h-48 ${imgStatus === "loading" ? "opacity-0" : "opacity-100"}`}>
+                <Image
+                  src={imageSrc}
+                  alt=""
+                  fill
+                  unoptimized={true}
+                  onLoad={() => setImgStatus("loaded")}
+                  onError={() => setImgStatus("error")}
+                  className="object-contain"
+                />
+              </div>
             </>
           )}
         </div>
