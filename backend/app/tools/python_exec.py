@@ -39,6 +39,20 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        wrapper_code = """
+import sys
+import runpy
+
+def _block_net(name, args):
+    if name.startswith('socket.'):
+        raise PermissionError('Network blocked')
+
+sys.addaudithook(_block_net)
+runpy.run_path('snippet.py', run_name='__main__')
+"""
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text(wrapper_code.strip(), encoding="utf-8")
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +64,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
