@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,7 +46,7 @@ function CardImage({ src }: { src: string }) {
               <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
             </div>
           )}
-          <img
+          <Image width={0} height={0} sizes="100vw" style={{width: "100%", height: "auto"}} unoptimized={true}
             src={fullSrc}
             alt=""
             onLoad={() => setStatus("loaded")}
