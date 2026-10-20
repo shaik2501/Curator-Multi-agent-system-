@@ -39,14 +39,9 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
-        env = {
-            k: v
-            for k, v in __import__("os").environ.items()
-            if k not in _NETWORK_ENV_KEYS_TO_STRIP
-        }
         # Minimize inherited environment further while keeping PATH so the
         # interpreter itself can be located.
-        env = {"PATH": env.get("PATH", "")}
+        env = {"PATH": __import__("os").environ.get("PATH", "")}
 
         try:
             proc = subprocess.run(
