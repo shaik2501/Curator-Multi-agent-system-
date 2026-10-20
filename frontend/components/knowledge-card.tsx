@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
+import Image from "next/image";
 import type { KnowledgeEntry, NoteSource } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -44,20 +45,22 @@ export function KnowledgeCard({ entry }: { entry: KnowledgeEntry }) {
               <p className="text-[10px]">Image unavailable</p>
             </div>
           ) : (
-            <>
+            <div className="relative w-full h-48">
               {imgStatus === "loading" && (
-                <div className="flex h-24 items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <Icon name="sync" className="animate-spin text-[18px] text-on-surface-variant/50" />
                 </div>
               )}
-              <img
+              <Image
+                unoptimized={true}
+                fill={true}
                 src={imageSrc}
                 alt=""
                 onLoad={() => setImgStatus("loaded")}
                 onError={() => setImgStatus("error")}
-                className={`max-h-56 w-full object-contain ${imgStatus === "loading" ? "hidden" : ""}`}
+                className={`object-contain ${imgStatus === "loading" ? "opacity-0 absolute" : ""}`}
               />
-            </>
+            </div>
           )}
         </div>
       )}
