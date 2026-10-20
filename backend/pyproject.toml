@@ -16,7 +16,7 @@ dependencies = [
     "chromadb",
     "sqlmodel",
     "tavily-python",
-    "ddgs",
+    "duckduckgo-search",
     "httpx",
     "beautifulsoup4",
     "pydantic",
