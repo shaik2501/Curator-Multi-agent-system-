@@ -18,6 +18,7 @@ from app.events import subscribe
 from app.graph import new_run_id
 from app.llm import DEFAULT_OLLAMA_BASE_URL, DEFAULT_OLLAMA_MODEL, KNOWN_PROVIDERS, check_ollama_reachable
 from app.llm_configs import PRETTY_NAMES, default_label, seed_from_env_if_empty, to_public_dict, verify_config
+from contextlib import asynccontextmanager
 from app.model_listing import list_models
 from app.run_manager import get_task, start_run
 from app.state import AGENT_ROLES
@@ -27,7 +28,16 @@ from app.state import AGENT_ROLES
 # arbitrary endpoint).
 _AUTO_IMAGE_CAPABLE_PROVIDERS = {"openai": True, "gemini": True, "claude": False, "ollama": False}
 
-app = FastAPI(title="Curator Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.init_db()
+    # One-time seed from .env so a previously-working setup (e.g. a real
+    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
+    # .env provider vars are never read again at run time.
+    seed_from_env_if_empty()
+    yield
+
+app = FastAPI(title="Curator Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,15 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    db.init_db()
-    # One-time seed from .env so a previously-working setup (e.g. a real
-    # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
-    # .env provider vars are never read again at run time.
-    seed_from_env_if_empty()
 
 
 @app.get("/health")
