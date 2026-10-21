@@ -39,6 +39,23 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        # We enforce network isolation by mocking the socket module's creation
+        # to ensure it raises an error. However, we only inject this hook strictly
+        # before the snippet execution. As per memory guidelines: "When applying
+        # security scripts... ensure it is injected strictly *after* any
+        # `from __future__ import ...` statements, or execute the code via a wrapper
+        # script using `runpy` to avoid source code mutation and prevent SyntaxErrors."
+        wrapper_path.write_text(
+            "import sys, runpy\n"
+            "def audit(event, args):\n"
+            "    if event.startswith('socket.'):\n"
+            "        raise PermissionError('Network access blocked')\n"
+            "sys.addaudithook(audit)\n"
+            "runpy.run_path('snippet.py', run_name='__main__')\n",
+            encoding="utf-8"
+        )
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +67,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
