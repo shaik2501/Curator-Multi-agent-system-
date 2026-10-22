@@ -7,6 +7,7 @@ from typing import Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -38,13 +39,16 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     db.init_db()
     # One-time seed from .env so a previously-working setup (e.g. a real
     # ANTHROPIC_API_KEY) keeps working with zero user action. After this,
     # .env provider vars are never read again at run time.
     seed_from_env_if_empty()
+    yield
+
+app.router.lifespan_context = lifespan
 
 
 @app.get("/health")
