@@ -39,18 +39,29 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
-        env = {
-            k: v
-            for k, v in __import__("os").environ.items()
-            if k not in _NETWORK_ENV_KEYS_TO_STRIP
-        }
         # Minimize inherited environment further while keeping PATH so the
         # interpreter itself can be located.
-        env = {"PATH": env.get("PATH", "")}
+        env = {"PATH": __import__("os").environ.get("PATH", "")}
+
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text("""\
+import sys
+
+def audit_hook(event, args):
+    if event in {"socket.connect", "socket.getaddrinfo"}:
+        raise PermissionError("Network access is blocked in this sandbox.")
+
+sys.addaudithook(audit_hook)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        import runpy
+        runpy.run_path(sys.argv[1], run_name="__main__")
+""", encoding="utf-8")
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path), str(script_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
