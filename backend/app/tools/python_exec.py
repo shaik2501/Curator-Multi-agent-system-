@@ -48,9 +48,23 @@ def run_python(code: str) -> ExecResult:
         # interpreter itself can be located.
         env = {"PATH": env.get("PATH", "")}
 
+        import textwrap
+        wrapper_code = textwrap.dedent(f"""\
+            import sys
+            def block_network(event, args):
+                if event.startswith('socket.'):
+                    raise RuntimeError('Network access blocked in sandbox')
+            sys.addaudithook(block_network)
+            import runpy
+            runpy.run_path({str(script_path)!r}, run_name='__main__')
+        """)
+
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
