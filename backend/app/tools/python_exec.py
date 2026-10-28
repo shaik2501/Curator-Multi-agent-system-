@@ -39,6 +39,10 @@ def run_python(code: str) -> ExecResult:
         script_path = Path(tmpdir) / "snippet.py"
         script_path.write_text(code, encoding="utf-8")
 
+        wrapper_path = Path(tmpdir) / "wrapper.py"
+        wrapper_code = '''import sys\nimport runpy\ndef _audit_hook(event, args):\n    if event == "socket.connect":\n        raise PermissionError("Network access blocked in sandbox")\nsys.addaudithook(_audit_hook)\nrunpy.run_path(sys.argv[1], run_name="__main__")'''
+        wrapper_path.write_text(wrapper_code, encoding="utf-8")
+
         env = {
             k: v
             for k, v in __import__("os").environ.items()
@@ -50,7 +54,7 @@ def run_python(code: str) -> ExecResult:
 
         try:
             proc = subprocess.run(
-                [sys.executable, "-I", str(script_path)],
+                [sys.executable, "-I", str(wrapper_path), str(script_path)],
                 cwd=tmpdir,
                 env=env,
                 capture_output=True,
