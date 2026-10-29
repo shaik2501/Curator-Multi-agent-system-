@@ -172,39 +172,6 @@ export default function RunClient({ runId }: { runId: string }) {
     return () => clearInterval(interval);
   }, [isTerminal, run?.created_at, run?.updated_at]);
 
-  // SSE subscription
-  useEffect(() => {
-    if (loadError) return;
-    const unsubscribe = subscribeToRunEvents(runId, {
-      onOpen: () => setConnected(true),
-      onError: () => {
-        setConnected(false);
-        // A finished run intentionally has its stream closed (see below) or
-        // was never expected to stay connected — don't alarm the user.
-        if (!isTerminalRef.current) {
-          setStreamError(
-            "Lost connection to the live event stream. The run may still be progressing on the server.",
-          );
-        }
-      },
-      onEvent: (event: RunEvent) => {
-        // Dedupe replayed events (EventSource reconnects replay persisted
-        // events from the backend) using the stable SSE id when present.
-        if (event.id) {
-          if (seenEventIdsRef.current.has(event.id)) return;
-          seenEventIdsRef.current.add(event.id);
-        }
-        handleEvent(event);
-      },
-    });
-    unsubscribeRef.current = unsubscribe;
-    return () => {
-      unsubscribe();
-      unsubscribeRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runId, loadError]);
-
   const setAgentState = useCallback((agent: string | undefined, state: AgentState) => {
     const key = toAgentKey(agent);
     setAgentStates((prev) => ({ ...prev, [key]: state }));
@@ -350,8 +317,39 @@ export default function RunClient({ runId }: { runId: string }) {
         break;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [addCard, setAgentState]);
+
+  // SSE subscription
+  useEffect(() => {
+    if (loadError) return;
+    const unsubscribe = subscribeToRunEvents(runId, {
+      onOpen: () => setConnected(true),
+      onError: () => {
+        setConnected(false);
+        // A finished run intentionally has its stream closed (see below) or
+        // was never expected to stay connected — don't alarm the user.
+        if (!isTerminalRef.current) {
+          setStreamError(
+            "Lost connection to the live event stream. The run may still be progressing on the server.",
+          );
+        }
+      },
+      onEvent: (event: RunEvent) => {
+        // Dedupe replayed events (EventSource reconnects replay persisted
+        // events from the backend) using the stable SSE id when present.
+        if (event.id) {
+          if (seenEventIdsRef.current.has(event.id)) return;
+          seenEventIdsRef.current.add(event.id);
+        }
+        handleEvent(event);
+      },
+    });
+    unsubscribeRef.current = unsubscribe;
+    return () => {
+      unsubscribe();
+      unsubscribeRef.current = null;
+    };
+  }, [runId, loadError, handleEvent]);
 
   const handleStop = async () => {
     setStopError(null);
